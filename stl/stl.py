@@ -89,46 +89,7 @@ class BaseStl(base.BaseMesh):
         :param file fh: The file handle to open
         :param int mode: Automatically detect the filetype or force binary
         """
-        header = fh.read(HEADER_SIZE)
-        if not header:
-            return None
-
-        if isinstance(header, str):  # pragma: no branch
-            header = b(header)
-
-        if mode is AUTOMATIC:
-            if header.lstrip().lower().startswith(b'solid'):
-                try:
-                    name, data = cls._load_ascii(fh, header, speedups=speedups)
-                except RuntimeError as exception:
-                    (recoverable, _) = exception.args
-                    # If we didn't read beyond the header the stream is still
-                    # readable through the binary reader
-                    if recoverable:
-                        name, data = cls._load_binary(
-                            fh, header, check_size=False
-                        )
-                    else:
-                        # Apparently we've read beyond the header. Let's try
-                        # seeking :)
-                        # Note that this fails when reading from stdin, we
-                        # can't recover from that.
-                        fh.seek(HEADER_SIZE)
-
-                        # Since we know this is a seekable file now and we're
-                        # not 100% certain it's binary, check the size while
-                        # reading
-                        name, data = cls._load_binary(
-                            fh, header, check_size=True
-                        )
-            else:
-                name, data = cls._load_binary(fh, header)
-        elif mode is ASCII:
-            name, data = cls._load_ascii(fh, header, speedups=speedups)
-        else:
-            name, data = cls._load_binary(fh, header)
-
-        return name, data
+        pass
 
     @classmethod
     def _load_binary(
@@ -138,40 +99,7 @@ class BaseStl(base.BaseMesh):
         check_size: bool = False,
     ) -> tuple[bytes, '_data_1d']:
         # Read the triangle count
-        count_data = fh.read(COUNT_SIZE)
-        if len(count_data) != COUNT_SIZE:
-            count = 0
-        else:
-            (count,) = struct.unpack('<i', b(count_data))
-        # raise RuntimeError()
-        assert count < MAX_COUNT, (
-            f'File too large, got {count} triangles which '
-            f'exceeds the maximum of {MAX_COUNT}'
-        )
-
-        if check_size:
-            try:
-                # Check the size of the file
-                fh.seek(0, os.SEEK_END)
-                raw_size = fh.tell() - HEADER_SIZE - COUNT_SIZE
-                expected_count = int(raw_size / cls.dtype.itemsize)
-                assert expected_count == count, (
-                    f'Expected {expected_count} vectors but header indicates '
-                    f'{count}'
-                )
-                fh.seek(HEADER_SIZE + COUNT_SIZE)
-            except OSError:  # pragma: no cover
-                pass
-
-        name = header.strip()
-
-        # Read the rest of the binary data
-        try:
-            return name, np.fromfile(fh, dtype=cls.dtype, count=count)
-        except io.UnsupportedOperation:
-            data = np.frombuffer(fh.read(), dtype=cls.dtype, count=count)
-            # Copy to make the buffer writable
-            return name, data.copy()
+        pass
 
     @staticmethod
     def _ascii_reader(  # noqa: C901
@@ -181,92 +109,7 @@ class BaseStl(base.BaseMesh):
         None,
         None,
     ]:
-        if b'\n' in header:
-            recoverable = [True]
-        else:
-            recoverable = [False]
-            header += b(fh.read(BUFFER_SIZE))
-
-        lines = b(header).split(b'\n')
-
-        def get(prefix: '_Name' = '') -> 'bytes | list[float]':
-            prefix = b(prefix).lower()
-
-            if lines:
-                raw_line = lines.pop(0)
-            else:
-                raise RuntimeError(recoverable[0], 'Unable to find more lines')
-
-            if not lines:
-                recoverable[0] = False
-
-                # Read more lines and make sure we prepend any old data
-                lines[:] = b(fh.read(BUFFER_SIZE)).split(b'\n')
-                raw_line += lines.pop(0)
-
-            raw_line = raw_line.strip()
-            line = raw_line.lower()
-            if line == b(''):
-                return get(prefix)
-
-            if prefix:
-                if line.startswith(prefix):
-                    values = line.replace(prefix, b(''), 1).strip().split()
-                elif line.startswith((b('endsolid'), b('end solid'))):
-                    # go back to the beginning of new solid part
-                    size_unprocessedlines = (
-                        sum(len(line) + 1 for line in lines) - 1
-                    )
-
-                    if size_unprocessedlines > 0:
-                        position = fh.tell()
-                        fh.seek(position - size_unprocessedlines)
-                    raise StopIteration()
-                else:
-                    raise RuntimeError(
-                        recoverable[0],
-                        f'{line!r} should start with {prefix!r}',
-                    )
-
-                if len(values) == 3:
-                    return [float(v) for v in values]
-                else:  # pragma: no cover
-                    raise RuntimeError(
-                        recoverable[0], f'Incorrect value {line!r}'
-                    )
-            else:
-                return b(raw_line)
-
-        line = get()
-        if not lines:
-            raise RuntimeError(
-                recoverable[0], 'No lines found, impossible to read'
-            )
-
-        # Yield the name
-        yield cast('bytes', line[5:]).strip()
-
-        while True:
-            # Read from the header lines first, until that point we can recover
-            # and go to the binary option. After that we cannot due to
-            # unseekable files such as sys.stdin
-            #
-            # Numpy doesn't support any non-file types so wrapping with a
-            # buffer and/or StringIO does not work.
-            try:
-                normals = cast('list[float]', get('facet normal'))
-                assert cast('bytes', get()).lower() == b('outer loop')
-                v0 = cast('bytes', get('vertex'))
-                v1 = cast('bytes', get('vertex'))
-                v2 = cast('bytes', get('vertex'))
-                assert cast('bytes', get()).lower() == b('endloop')
-                assert cast('bytes', get()).lower() == b('endfacet')
-                attrs = 0
-                yield (normals, (v0, v1, v2), attrs)
-            except AssertionError as e:  # pragma: no cover  # noqa: PERF203
-                raise RuntimeError(recoverable[0], e) from e
-            except StopIteration:
-                return
+        pass
 
     @classmethod
     def _load_ascii(
@@ -276,18 +119,7 @@ class BaseStl(base.BaseMesh):
         speedups: bool = True,
     ) -> tuple[bytes, '_data_1d']:
         # Speedups does not support non file-based streams
-        try:
-            fh.fileno()
-        except io.UnsupportedOperation:
-            speedups = False
-        # The speedups module is covered by travis but it can't be tested in
-        # all environments, this makes coverage checks easier
-        if _speedups is not None and speedups:  # type: ignore[redundant-expr]  # pragma: no cover
-            return _speedups.ascii_read(fh, header)
-        else:
-            iterator = cls._ascii_reader(fh, header)
-            name = cast('bytes', next(iterator))
-            return name, np.fromiter(iterator, dtype=cls.dtype)
+        pass
 
     def save(  # noqa: C901
         self,
@@ -353,92 +185,18 @@ class BaseStl(base.BaseMesh):
             pass
 
     def _write_ascii(self, fh: IO[bytes], name: '_Name') -> None:
-        try:
-            fh.fileno()
-            speedups = self.speedups
-        except io.UnsupportedOperation:
-            speedups = False
-
-        if _speedups is not None and speedups:  # type: ignore[redundant-expr]  # pragma: no cover
-            _speedups.ascii_write(fh, b(name), self.data)
-        else:
-
-            def p(s: '_Name', file: 'SupportsWrite[bytes]') -> None:
-                file.write(b(s) + b'\n')
-
-            p(b'solid ' + b(name), file=fh)
-
-            for row in self.data:
-                # Explicitly convert each component to standard float for
-                # normals and vertices to be compatible with numpy 2.x
-                normals = tuple(float(n) for n in row['normals'])
-                vectors = row['vectors']
-                p('facet normal {:f} {:f} {:f}'.format(*normals), file=fh)
-                p('  outer loop', file=fh)
-                p(
-                    '    vertex {:f} {:f} {:f}'.format(
-                        *tuple(float(v) for v in vectors[0])
-                    ),
-                    file=fh,
-                )
-                p(
-                    '    vertex {:f} {:f} {:f}'.format(
-                        *tuple(float(v) for v in vectors[1])
-                    ),
-                    file=fh,
-                )
-                p(
-                    '    vertex {:f} {:f} {:f}'.format(
-                        *tuple(float(v) for v in vectors[2])
-                    ),
-                    file=fh,
-                )
-                p('  endloop', file=fh)
-                p('endfacet', file=fh)
-
-            p(b'endsolid ' + b(name), file=fh)
+        pass
 
     def get_header(self, name: '_Name') -> str:
         # Format the header
-        header: str = HEADER_FORMAT.format(
-            package_name=metadata.__package_name__,
-            version=metadata.__version__,
-            now=datetime.datetime.now(),
-            name=name,
-        )
-
-        # Make it exactly 80 characters
-        return header[:80].ljust(80, ' ')
+        pass
 
     def _write_binary(
         self,
         fh: '_StatefulWriter | io.TextIOWrapper',
         name: '_Name',
     ) -> None:
-        header = self.get_header(name)
-        packed = struct.pack('<i', self.data.size)
-
-        if isinstance(fh, io.TextIOWrapper):  # pragma: no cover
-            fh.write(header)
-            fh.write(str(packed))
-        else:
-            fh.write(b(header))
-            fh.write(b(packed))
-
-        if isinstance(fh, io.BufferedWriter):
-            # Write to a true file.
-            self.data.tofile(fh)
-        else:
-            # Write to a pseudo buffer.
-            cast('_StatefulWriter', fh).write(self.data.data)
-
-        # In theory this should no longer be possible but I'll leave it here
-        # anyway...
-        if self.data.size:  # pragma: no cover
-            assert fh.tell() > 84, (
-                'numpy silently refused to write our file. Note that writing '
-                'to `StringIO` objects is not supported by `numpy`'
-            )
+        pass
 
     @classmethod
     def from_file(
@@ -458,16 +216,7 @@ class BaseStl(base.BaseMesh):
         :param dict kwargs: The same as for :py:class:`stl.mesh.Mesh`
 
         """
-        if fh:
-            name, data = cls.load(fh, mode=mode, speedups=speedups)
-        else:
-            with open(filename, 'rb') as fh:
-                name, data = cls.load(fh, mode=mode, speedups=speedups)
-
-        # pyrefly: ignore[bad-return]
-        return cls(
-            data, calculate_normals, name=name, speedups=speedups, **kwargs
-        )
+        pass
 
     @classmethod
     def from_multi_file(
@@ -489,29 +238,7 @@ class BaseStl(base.BaseMesh):
         :param file fh: The file handle to open
         :param dict kwargs: The same as for :py:class:`stl.mesh.Mesh`
         """
-        if fh:
-            close = False
-        else:
-            fh = open(filename, 'rb')  # noqa: SIM115
-            close = True
-
-        try:
-            raw_data = cls.load(fh, mode=mode, speedups=speedups)
-            while raw_data:
-                name, data = raw_data
-                # pyrefly: ignore[invalid-yield]
-                yield cls(
-                    data,
-                    calculate_normals,
-                    name=name,
-                    speedups=speedups,
-                    **kwargs,
-                )
-                raw_data = cls.load(fh, mode=ASCII, speedups=speedups)
-
-        finally:
-            if close:
-                fh.close()
+        pass
 
     @classmethod
     def from_files(
@@ -532,20 +259,7 @@ class BaseStl(base.BaseMesh):
         :param file fh: The file handle to open
         :param dict kwargs: The same as for :py:class:`stl.mesh.Mesh`
         """
-        meshes = [
-            cls.from_file(
-                filename,
-                calculate_normals=calculate_normals,
-                mode=mode,
-                speedups=speedups,
-                **kwargs,
-            )
-            for filename in filenames
-        ]
-
-        data = np.concatenate([mesh.data for mesh in meshes])
-        # pyrefly: ignore[bad-return]
-        return cls(data, calculate_normals=calculate_normals, **kwargs)
+        pass
 
     @classmethod
     def from_3mf_file(
@@ -554,56 +268,7 @@ class BaseStl(base.BaseMesh):
         calculate_normals: bool = True,
         **kwargs: object,
     ) -> Generator['Self', None, None]:
-        with zipfile.ZipFile(filename) as zip:
-            with zip.open('_rels/.rels') as rels_fh:
-                model = None
-                root = ET.parse(rels_fh).getroot()
-                for child in root:  # pragma: no branch
-                    type_ = child.attrib.get('Type', '')
-                    if type_.endswith('3dmodel'):  # pragma: no branch
-                        model = child.attrib.get('Target', '')
-                        break
-
-            assert model, f'No 3D model found in {filename}'
-            with zip.open(model.lstrip('/')) as fh:
-                root = ET.parse(fh).getroot()
-
-                elements = root.findall('./{*}resources/{*}object/{*}mesh')
-                for mesh_element in elements:  # pragma: no branch
-                    triangles: list[list[list[float]]] = []
-                    vertices: list[list[float]] = []
-
-                    for element in mesh_element:
-                        tag = element.tag
-                        if tag.endswith('vertices'):
-                            # Collect all the vertices
-                            for vertice in element:
-                                a = {
-                                    k: float(v)
-                                    for k, v in vertice.attrib.items()
-                                }
-                                vertices.append([a['x'], a['y'], a['z']])
-
-                        elif tag.endswith('triangles'):  # pragma: no branch
-                            # Map the triangles to the vertices and collect
-                            for triangle in element:
-                                a = {
-                                    k: int(v)
-                                    for k, v in triangle.attrib.items()
-                                }
-                                triangles.append(
-                                    [
-                                        vertices[a['v1']],
-                                        vertices[a['v2']],
-                                        vertices[a['v3']],
-                                    ]
-                                )
-
-                    mesh = cls(np.zeros(len(triangles), dtype=cls.dtype))
-                    # pyrefly: ignore[missing-attribute]
-                    mesh.vectors[:] = np.array(triangles)
-                    # pyrefly: ignore[invalid-yield]
-                    yield mesh
+        pass
 
 
 if TYPE_CHECKING:

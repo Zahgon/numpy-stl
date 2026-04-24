@@ -110,12 +110,7 @@ class RemoveDuplicates(enum.Enum):
 
     @classmethod
     def map(cls, /, value: '_Dedupe') -> 'RemoveDuplicates':
-        if value is True:
-            return cls.SINGLE
-        elif value and value in cls:
-            return cls(value)
-        else:
-            return cls.NONE
+        pass
 
 
 _LoggedT = TypeVar('_LoggedT', bound='_Logged')
@@ -126,18 +121,7 @@ def logged(class_: type[_LoggedT]) -> type[_LoggedT]:
     # systems while this works on OS X. Please let me know if you can tell me
     # what silly mistake I made here
 
-    logger_name = cast(
-        'str',
-        logger.Logged._Logged__get_name(__name__, class_.__name__),  # type: ignore[attr-defined]
-    )
-
-    class_.logger = logging.getLogger(logger_name)
-
-    for key in dir(logger.Logged):
-        if not key.startswith('__'):
-            setattr(class_, key, getattr(class_, key))
-
-    return class_
+    pass
 
 
 @logged
@@ -285,130 +269,97 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
     @property
     def attr(self) -> _u16_2d:
         # https://github.com/numpy/numpy/pull/30261
-        return self.data['attr']  # type: ignore[return-value]
+        pass
 
     @attr.setter
     def attr(self, value: '_ArrayLikeInt_co', /) -> None:
-        self.data['attr'] = value
+        pass
 
     @property
     def normals(self) -> _f32_2d:
         # https://github.com/numpy/numpy/pull/30261
-        return self.data['normals']  # type: ignore[return-value]
+        pass
 
     @normals.setter
     def normals(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.data['normals'] = value
+        pass
 
     @property
     def vectors(self) -> _f32_3d:
         # https://github.com/numpy/numpy/pull/30261
-        return self.data['vectors']  # type: ignore[return-value]
+        pass
 
     @vectors.setter
     def vectors(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.data['vectors'] = value
+        pass
 
     @property
     def points(self) -> _f32_2d:
-        return self.vectors.reshape(self.data.size, 9)
+        pass
 
     @points.setter
     def points(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.points[:] = value
+        pass
 
     @property
     def v0(self) -> _f32_2d:
-        return self.vectors[:, 0]
+        pass
 
     @v0.setter
     def v0(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.vectors[:, 0] = value
+        pass
 
     @property
     def v1(self) -> _f32_2d:
-        return self.vectors[:, 1]
+        pass
 
     @v1.setter
     def v1(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.vectors[:, 1] = value
+        pass
 
     @property
     def v2(self) -> _f32_2d:
-        return self.vectors[:, 2]
+        pass
 
     @v2.setter
     def v2(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.vectors[:, 2] = value
+        pass
 
     @property
     def x(self) -> _f32_2d:
-        return self.points[:, Dimension.X :: 3]
+        pass
 
     @x.setter
     def x(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.points[:, Dimension.X :: 3] = value
+        pass
 
     @property
     def y(self) -> _f32_2d:
-        return self.points[:, Dimension.Y :: 3]
+        pass
 
     @y.setter
     def y(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.points[:, Dimension.Y :: 3] = value
+        pass
 
     @property
     def z(self) -> _f32_2d:
-        return self.points[:, Dimension.Z :: 3]
+        pass
 
     @z.setter
     def z(self, value: '_ArrayLikeFloat_co', /) -> None:
-        self.points[:, Dimension.Z :: 3] = value
+        pass
 
     @staticmethod
     def remove_duplicate_polygons(
         data: _data_1d,
         value: '_Dedupe' = RemoveDuplicates.SINGLE,
     ) -> _data_1d:
-        value = RemoveDuplicates.map(value)
-        polygons: _f32_2d = data['vectors'].sum(axis=1)
-        # Get a sorted list of indices
-        idx: _intp_1d = np.lexsort(polygons.T)
-        # Get the indices of all different indices
-        diff: _bool_1d = np.any(
-            polygons[idx[1:]] != polygons[idx[:-1]],
-            axis=1,
-        )
-
-        if value is RemoveDuplicates.SINGLE:
-            # Only return the unique data, the True is so we always get at
-            # least the originals
-            return data[np.sort(idx[np.concatenate(([True], diff))])]
-        elif value is RemoveDuplicates.ALL:
-            # We need to return both items of the shifted diff
-            diff_a: _bool_1d = np.concatenate(([True], diff))
-            diff_b: _bool_1d = np.concatenate((diff, [True]))
-            diff = np.concatenate((diff, [False]))
-
-            # Combine both unique lists
-            filtered_data: _data_1d = data[np.sort(idx[diff_a & diff_b])]
-            if len(filtered_data) <= len(data) / 2:
-                return data[np.sort(idx[diff_a])]
-            else:
-                return data[np.sort(idx[diff])]
-        else:
-            return data
+        pass
 
     @staticmethod
     def remove_empty_areas(data: _data_1d) -> _data_1d:
         # https://github.com/numpy/numpy/pull/30261
-        vectors: _f32_3d = data['vectors']  # type: ignore[assignment]
-        v0 = vectors[:, 0]
-        v1 = vectors[:, 1]
-        v2 = vectors[:, 2]
-        normals = np.cross(v1 - v0, v2 - v0)
-        squared_areas = (normals**2).sum(axis=1)
-        return data[squared_areas > AREA_SIZE_THRESHOLD**2]
+        pass
 
     def update_normals(
         self,
@@ -427,18 +378,13 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
         self.normals[:] = normals
 
     def get_unit_normals(self) -> _f32_2d:
-        normals = self.normals.copy()
-        normal: _f32_1d = np.linalg.norm(normals, axis=1)
-        non_zero = normal > 0
-        if non_zero.any():
-            normals[non_zero] /= normal[non_zero][:, None]
-        return normals
+        pass
 
     def update_min(self) -> None:
-        self._min = self.vectors.min(axis=(0, 1))
+        pass
 
     def update_max(self) -> None:
-        self._max = self.vectors.max(axis=(0, 1))
+        pass
 
     def update_areas(self, normals: '_f32_2d | None' = None) -> None:
         if normals is None:
@@ -455,61 +401,14 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
 
         :param bool exact: Perform exact checks.
         """
-        return self.is_closed(exact=exact)
+        pass
 
     def is_closed(self, exact: bool = False) -> bool:  # pragma: no cover
         """Check the mesh is closed or not
 
         :param bool exact: Perform a exact check on edges.
         """
-
-        if exact:
-            reversed_triangles: _bool_1d = (
-                np.cross(self.v1 - self.v0, self.v2 - self.v0) * self.normals
-            ).sum(axis=1) < 0
-            directed_edges = {
-                tuple(edge.ravel() if not rev else edge[::-1, :].ravel())
-                for rev, edge in zip(
-                    itertools.cycle(reversed_triangles),
-                    itertools.chain(
-                        self.vectors[:, (0, 1), :],
-                        self.vectors[:, (1, 2), :],
-                        self.vectors[:, (2, 0), :],
-                    ),
-                )
-            }
-            if len(directed_edges) == 3 * self.data.size:
-                undirected_edges = {
-                    frozenset((edge[:3], edge[3:])) for edge in directed_edges
-                }
-                if len(directed_edges) == 2 * len(undirected_edges):
-                    return True
-
-        else:
-            self.logger.warning(
-                """
-            Use of not exact is_closed check. This check can lead to misleading
-            results. You could try to use `exact=True`.
-            See:
-             - false positive: https://github.com/wolph/numpy-stl/issues/198
-             - false negative: https://github.com/wolph/numpy-stl/pull/213
-            """.strip()
-            )
-            normals = np.asarray(self.normals, dtype=np.float64)
-            allowed_max_errors = (
-                np.abs(normals).sum(axis=0) * np.finfo(np.float32).eps
-            )
-            if (np.abs(normals.sum(axis=0)) <= allowed_max_errors).all():
-                return True
-
-        self.logger.warning(
-            """
-        Your mesh is not closed, the mass methods will not function
-        correctly on this mesh.  For more info:
-        https://github.com/WoLpH/numpy-stl/issues/69
-        """.strip()
-        )
-        return False
+        pass
 
     def get_mass_properties(self) -> tuple[np.float32, _f32_1d, _f64_2d]:
         """
@@ -521,83 +420,14 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
         Documentation can be found here:
         http://www.geometrictools.com/Documentation/PolyhedralMassProperties.pdf
         """
-        self.check(True)
-
-        def subexpression(x: _f32_2d) -> tuple[_f32_1d, ...]:
-            w0, w1, w2 = x[:, 0], x[:, 1], x[:, 2]
-            temp0 = w0 + w1
-            f1 = temp0 + w2
-            temp1 = w0 * w0
-            temp2 = temp1 + w1 * temp0
-            f2 = temp2 + w2 * f1
-            f3 = w0 * temp1 + w1 * temp2 + w2 * f2
-            g0 = f2 + w0 * (f1 + w0)
-            g1 = f2 + w1 * (f1 + w1)
-            g2 = f2 + w2 * (f1 + w2)
-            return f1, f2, f3, g0, g1, g2
-
-        x0, x1, x2 = self.x[:, 0], self.x[:, 1], self.x[:, 2]
-        y0, y1, y2 = self.y[:, 0], self.y[:, 1], self.y[:, 2]
-        z0, z1, z2 = self.z[:, 0], self.z[:, 1], self.z[:, 2]
-        a1, b1, c1 = x1 - x0, y1 - y0, z1 - z0
-        a2, b2, c2 = x2 - x0, y2 - y0, z2 - z0
-        d0, d1, d2 = b1 * c2 - b2 * c1, a2 * c1 - a1 * c2, a1 * b2 - a2 * b1
-
-        f1x, f2x, f3x, g0x, g1x, g2x = subexpression(self.x)
-        f1y, f2y, f3y, g0y, g1y, g2y = subexpression(self.y)  # noqa: RUF059
-        f1z, f2z, f3z, g0z, g1z, g2z = subexpression(self.z)  # noqa: RUF059
-
-        intg = np.zeros(10)
-        intg[0] = sum(d0 * f1x)
-        intg[1:4] = sum(d0 * f2x), sum(d1 * f2y), sum(d2 * f2z)
-        intg[4:7] = sum(d0 * f3x), sum(d1 * f3y), sum(d2 * f3z)
-        intg[7] = sum(d0 * (y0 * g0x + y1 * g1x + y2 * g2x))
-        intg[8] = sum(d1 * (z0 * g0y + z1 * g1y + z2 * g2y))
-        intg[9] = sum(d2 * (x0 * g0z + x1 * g1z + x2 * g2z))
-        intg /= np.array([6, 24, 24, 24, 60, 60, 60, 120, 120, 120])
-        volume = intg[0]
-        cog = intg[1:4] / volume
-        cogsq = cog**2
-        inertia = np.zeros((3, 3))
-        inertia[0, 0] = intg[5] + intg[6] - volume * (cogsq[1] + cogsq[2])
-        inertia[1, 1] = intg[4] + intg[6] - volume * (cogsq[2] + cogsq[0])
-        inertia[2, 2] = intg[4] + intg[5] - volume * (cogsq[0] + cogsq[1])
-        inertia[0, 1] = inertia[1, 0] = -(intg[7] - volume * cog[0] * cog[1])
-        inertia[1, 2] = inertia[2, 1] = -(intg[8] - volume * cog[1] * cog[2])
-        inertia[0, 2] = inertia[2, 0] = -(intg[9] - volume * cog[2] * cog[0])
-        return volume, cog, inertia
+        pass
 
     def is_convex(self) -> bool:
         """Return True if the mesh is convex, False otherwise."""
-        # For each face, project every vertex onto the normal vector and make
-        # sure it isn't longer than the projection of the face itself.
-        # The dot product is a scaled projection: (a dot b) = |a||b| cos(angle)
-        for i, normal_vector in enumerate(self.normals):
-            face_projection = np.dot(self.v0[i], normal_vector)
-            normal_vector_2d = np.expand_dims(normal_vector, axis=-1)
-            all_vertex_projection = np.matmul(self.vectors, normal_vector_2d)
-            if not np.all(all_vertex_projection <= face_projection):
-                return False
-
-        return True
+        pass
 
     def update_units(self) -> None:
-        units = self.normals.copy()
-        non_zero_areas = self.areas > 0
-        areas = self.areas
-
-        if non_zero_areas.shape[0] != areas.shape[0]:  # pragma: no cover
-            self.logger.warning(
-                'Zero sized areas found, '
-                'units calculation will be partially incorrect'
-            )
-
-        if non_zero_areas.any():
-            non_zero_areas.shape = non_zero_areas.shape[0]
-            areas = np.hstack((2 * areas[non_zero_areas],) * DIMENSIONS)
-            units[non_zero_areas] /= areas
-
-        self.units = units
+        pass
 
     @staticmethod
     def rotation_matrix(axis: '_ToAxis', theta: float) -> _f64_2d:
@@ -613,28 +443,7 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
         :param float theta: Rotation angle in radians, use `math.radians` to
                      convert degrees to radians if needed.
         """
-        axis_ = np.asarray(axis)
-        # No need to rotate if there is no actual rotation
-        if not axis_.any():
-            return np.identity(3)
-
-        axis_ = axis_ / np.linalg.norm(axis_)
-
-        theta_ = 0.5 * np.asarray(theta)
-        a = math.cos(theta_)
-        b, c, d = -axis_ * math.sin(theta_)
-        angles = a, b, c, d
-        powers = [x * y for x in angles for y in angles]
-        aa, ab, ac, ad = powers[0:4]
-        ba, bb, bc, bd = powers[4:8]  # noqa: RUF059
-        ca, cb, cc, cd = powers[8:12]  # noqa: RUF059
-        da, db, dc, dd = powers[12:16]  # noqa: RUF059
-
-        return np.array([
-            [aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-            [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-            [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc],
-        ])
+        pass
 
     def rotate(
         self,
@@ -658,11 +467,7 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
         :param numpy.array point: Rotation point so manual translation is not
                                   required
         """
-        # No need to rotate if there is no actual rotation
-        if not theta:
-            return
-
-        self.rotate_using_matrix(self.rotation_matrix(axis, theta), point)
+        pass
 
     def rotate_using_matrix(
         self,
@@ -677,35 +482,7 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
         For more details, read here:
         https://github.com/WoLpH/numpy-stl/issues/166
         """
-
-        identity = np.identity(rotation_matrix.shape[0])
-        # No need to rotate if there is no actual rotation
-        if not rotation_matrix.any() or (identity == rotation_matrix).all():
-            return
-
-        if isinstance(point, (np.ndarray, list, tuple)) and len(point) == 3:
-            point = np.asarray(point)
-        elif point is None:
-            point = np.array([0, 0, 0])
-        elif isinstance(point, (int, float)):
-            point = np.asarray([point] * 3)
-        else:
-            raise TypeError('Incorrect type for point', point)
-
-        def _rotate(matrix: _f32_2d) -> _f64_2d:
-            if point.any():
-                # Translate while rotating
-                return (matrix - point).dot(rotation_matrix) + point
-            else:
-                # Simply apply the rotation
-                return matrix.dot(rotation_matrix)
-
-        # Rotate the normals
-        self.normals[:] = _rotate(self.normals[:])
-
-        # Rotate the vectors
-        for i in range(3):
-            self.vectors[:, i] = _rotate(self.vectors[:, i])
+        pass
 
     def translate(self, translation: '_ToTranslation') -> None:
         """
@@ -713,10 +490,7 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
 
         :param numpy.array translation: Translation vector (x, y, z)
         """
-        assert len(translation) == 3, 'Translation vector must be of length 3'
-        self.x += translation[0]
-        self.y += translation[1]
-        self.z += translation[2]
+        pass
 
     def transform(self, matrix: '_f32_2d | _f64_2d') -> None:
         """
@@ -729,81 +503,52 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
                                    matrix[0:3, 3] represents the translation
                                    part of the transformation
         """
-        is_a_4x4_matrix = matrix.shape == (4, 4)
-        assert is_a_4x4_matrix, 'Transformation matrix must be of shape (4, 4)'
-        rotation = matrix[0:3, 0:3]
-        unit_det_rotation = np.allclose(np.linalg.det(rotation), 1.0)
-        assert unit_det_rotation, 'Rotation matrix has not a unit determinant'
-        for i in range(3):
-            self.vectors[:, i] = np.dot(rotation, self.vectors[:, i].T).T
-        self.x += matrix[0, 3]
-        self.y += matrix[1, 3]
-        self.z += matrix[2, 3]
+        pass
 
     @property
     def min_(self) -> _f32_1d:
         """Mesh minimum value"""
-        try:
-            return self._min
-        except AttributeError:
-            self.update_min()
-        return self._min
+        pass
 
     @min_.setter
     def min_(self, min_: _f32_1d, /) -> None:
-        self._min = min_  # pragma: no cover
+        pass
 
     @property
     def max_(self) -> _f32_1d:
         """Mesh maximum value"""
-        try:
-            return self._max
-        except AttributeError:
-            self.update_max()
-        return self._max
+        pass
 
     @max_.setter
     def max_(self, max_: _f32_1d, /) -> None:
-        self._max = max_  # pragma: no cover
+        pass
 
     @property
     def areas(self) -> _f32_2d:
         """Mesh areas"""
-        try:
-            return self._areas
-        except AttributeError:
-            self.update_areas()
-        return self._areas
+        pass
 
     @areas.setter
     def areas(self, areas: _f32_2d, /) -> None:
-        self._areas = areas  # pragma: no cover
+        pass
 
     @property
     def centroids(self) -> _f32_2d:
         """Mesh centroids"""
-        try:
-            return self._centroids
-        except AttributeError:
-            self.update_centroids()
-        return self._centroids
+        pass
 
     @centroids.setter
     def centroids(self, centroids: _f32_2d, /) -> None:
-        self._centroids = centroids  # pragma: no cover
+        pass
 
     @property
     def units(self) -> _f32_2d:
         """Mesh unit vectors"""
-        try:
-            return self._units
-        except AttributeError:
-            self.update_units()
-        return self._units
+        pass
 
     @units.setter
     def units(self, units: _f32_2d, /) -> None:
-        self._units = units
+        pass
 
     @overload
     def __getitem__(self, k: '_ToSlice2_0', /) -> np.float32: ...
@@ -834,63 +579,4 @@ class BaseMesh(logger.Logged, abc.Mapping['_ToIndices', np.ndarray]):
         density: float,
     ) -> tuple[np.float32, np.float32, _f32_1d, _f64_2d]:
         # add density for mesh,density unit kg/m3 when mesh is unit is m
-        self.check(True)
-
-        def subexpression(x: _f32_2d) -> tuple[_f32_1d, ...]:
-            w0, w1, w2 = x[:, 0], x[:, 1], x[:, 2]
-            temp0 = w0 + w1
-            f1 = temp0 + w2
-            temp1 = w0 * w0
-            temp2 = temp1 + w1 * temp0
-            f2 = temp2 + w2 * f1
-            f3 = w0 * temp1 + w1 * temp2 + w2 * f2
-            g0 = f2 + w0 * (f1 + w0)
-            g1 = f2 + w1 * (f1 + w1)
-            g2 = f2 + w2 * (f1 + w2)
-            return f1, f2, f3, g0, g1, g2
-
-        x0, x1, x2 = self.x[:, 0], self.x[:, 1], self.x[:, 2]
-        y0, y1, y2 = self.y[:, 0], self.y[:, 1], self.y[:, 2]
-        z0, z1, z2 = self.z[:, 0], self.z[:, 1], self.z[:, 2]
-        a1, b1, c1 = x1 - x0, y1 - y0, z1 - z0
-        a2, b2, c2 = x2 - x0, y2 - y0, z2 - z0
-        d0, d1, d2 = b1 * c2 - b2 * c1, a2 * c1 - a1 * c2, a1 * b2 - a2 * b1
-
-        f1x, f2x, f3x, g0x, g1x, g2x = subexpression(self.x)
-        f1y, f2y, f3y, g0y, g1y, g2y = subexpression(self.y)  # noqa: RUF059
-        f1z, f2z, f3z, g0z, g1z, g2z = subexpression(self.z)  # noqa: RUF059
-
-        intg = np.zeros(10)
-        intg[0] = sum(d0 * f1x)
-        intg[1:4] = sum(d0 * f2x), sum(d1 * f2y), sum(d2 * f2z)
-        intg[4:7] = sum(d0 * f3x), sum(d1 * f3y), sum(d2 * f3z)
-        intg[7] = sum(d0 * (y0 * g0x + y1 * g1x + y2 * g2x))
-        intg[8] = sum(d1 * (z0 * g0y + z1 * g1y + z2 * g2y))
-        intg[9] = sum(d2 * (x0 * g0z + x1 * g1z + x2 * g2z))
-        intg /= np.array([6, 24, 24, 24, 60, 60, 60, 120, 120, 120])
-        volume = intg[0]
-        cog = intg[1:4] / volume
-        cogsq = cog**2
-        vmass = volume * density
-        inertia = np.zeros((3, 3))
-
-        inertia[0, 0] = (intg[5] + intg[6]) * density - vmass * (
-            cogsq[1] + cogsq[2]
-        )
-        inertia[1, 1] = (intg[4] + intg[6]) * density - vmass * (
-            cogsq[2] + cogsq[0]
-        )
-        inertia[2, 2] = (intg[4] + intg[5]) * density - vmass * (
-            cogsq[0] + cogsq[1]
-        )
-        inertia[0, 1] = inertia[1, 0] = -(
-            intg[7] * density - vmass * cog[0] * cog[1]
-        )
-        inertia[1, 2] = inertia[2, 1] = -(
-            intg[8] * density - vmass * cog[1] * cog[2]
-        )
-        inertia[0, 2] = inertia[2, 0] = -(
-            intg[9] * density - vmass * cog[2] * cog[0]
-        )
-
-        return volume, vmass, cog, inertia
+        pass

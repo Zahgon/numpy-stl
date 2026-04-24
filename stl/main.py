@@ -103,38 +103,8 @@ def main() -> None:
 
 
 def to_ascii() -> None:
-    parser = _get_parser('Convert STL files to ASCII (text) format')
-    args = parser.parse_args()
-    name = _get_name(args)
-    stl_file = stl.StlMesh(
-        filename=name,
-        fh=args.infile,
-        calculate_normals=False,
-        remove_empty_areas=args.remove_empty_areas,
-        speedups=not args.disable_speedups,
-    )
-    stl_file.save(
-        name,
-        args.outfile,
-        mode=stl.ASCII,
-        update_normals=not args.use_file_normals,
-    )
+    pass
 
 
 def to_binary() -> None:
-    parser = _get_parser('Convert STL files to binary format')
-    args = parser.parse_args()
-    name = _get_name(args)
-    stl_file = stl.StlMesh(
-        filename=name,
-        fh=args.infile,
-        calculate_normals=False,
-        remove_empty_areas=args.remove_empty_areas,
-        speedups=not args.disable_speedups,
-    )
-    stl_file.save(
-        name,
-        args.outfile,
-        mode=stl.BINARY,
-        update_normals=not args.use_file_normals,
-    )
+    pass
